@@ -1,0 +1,43 @@
+# Normal Modes of Mass-Spring System with Non-Uniform Spring Constants
+# Code written by Group 5
+
+# This simulation models a mass-spring system.
+# The leftmost and rightmost masses are considered rigid walls.
+# Modelling method: Semi-Implicit Euler (Euler-Cromer)
+
+# Variables you can change:
+# n = number of masses (exluding walls)
+# k = list of spring constants
+# m = list of masses (excluding walls)
+# L = simulation ending time
+# dt = time steps
+# x_init, v_init = lists of initial conditions (excluding walls)
+# all initial conditions are 0 by default
+
+# Variables used in computation:
+# T = time (array)
+# len(T) = L/dt number of steps
+# t = time variable
+# x = displacement of mass i at time t (2D array filled with zeros)
+# v = velocity of mass i at time t (2D array filled with zeros)
+
+# x[0] = x[n+1] = v[0] = v[n+1] = 0  (boundary conditions)
+
+
+import matplotlib.pyplot as plt #This draws a graph
+import numpy as np #This makes arrays faster
+
+
+n = 4
+k = [1]*(n+1)
+m = [100]*(n)
+L = 5
+dt = 1
+
+#This is an evenly spaced array from 0 to L with stepsize dt
+T = np.arange(0,L,dt)
+#These are the 2D arrays (n by L/dt) filled with zeros (including walls)
+x = np.zeros((n+2,len(T)))
+v = x.copy()
+
+print(x)
