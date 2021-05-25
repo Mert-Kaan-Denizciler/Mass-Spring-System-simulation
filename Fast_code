@@ -1,43 +1,107 @@
-# Normal Modes of Mass-Spring System with Non-Uniform Spring Constants
-# Code written by Group 5
+"""
+Normal Modes of Mass-Spring System with Non-Uniform Spring Constants
 
-# This simulation models a mass-spring system.
-# The leftmost and rightmost masses are considered rigid walls.
-# Modelling method: Semi-Implicit Euler (Euler-Cromer)
+This simulation models any one-dimensional mass-spring system.
+The leftmost and rightmost masses are considered rigid walls.
+Modelling method: Semi-Implicit Euler (Euler-Cromer)
 
-# Variables you can change:
-# n = number of masses (exluding walls)
-# k = list of spring constants
-# m = list of masses (excluding walls)
-# L = simulation ending time
-# dt = time steps
-# x_init, v_init = lists of initial conditions (excluding walls)
-# all initial conditions are 0 by default
+Variables you can change:
+n = number of masses (exluding walls)
+k = list of spring constants
+m = list of masses (excluding walls)
+T = simulation ending time
+dt = time steps
+x_init, v_init = lists of initial conditions (excluding walls)
+(all initial conditions are 0 by default)
 
-# Variables used in computation:
-# T = time (array)
-# len(T) = L/dt number of steps
-# t = time variable
-# x = displacement of mass i at time t (2D array filled with zeros)
-# v = velocity of mass i at time t (2D array filled with zeros)
+Variables used in computation:
+s = number of steps
+t = time variable
+x = displacement of mass i at time t (2D array filled with zeros)
+v = velocity of mass i at time t (2D array filled with zeros)
+F = force
+a = acceleration
+E = total energy in the system
 
-# x[0] = x[n+1] = v[0] = v[n+1] = 0  (boundary conditions)
-
+x[0] = x[n+1] = v[0] = v[n+1] = 0  (boundary conditions)
+"""
 
 import matplotlib.pyplot as plt #This draws a graph
-import numpy as np #This makes arrays faster
+import numpy as np              #This makes arrays faster
+from numpy import random
 
-
-n = 4
-k = [1]*(n+1)
-m = [100]*(n)
-L = 5
+# Running time is O(n*T/dt)
+# Sampling theorem 
+n = 10
+m = [10]*(n)  # Small m can lead to a crash 
+T = 10000     # Larger T makes PSD more accurate
 dt = 1
+k = [1]*(n+1) # Large k can lead to crash
 
-#This is an evenly spaced array from 0 to L with stepsize dt
-T = np.arange(0,L,dt)
-#These are the 2D arrays (n by L/dt) filled with zeros (including walls)
-x = np.zeros((n+2,len(T)))
+# This makes the spring constants alternate between 1 and 5
+# The emergence of acoustic and optical bands can be seen in the PDS
+def alternating_k():    
+    for i in range(1,n+1,2):
+        k[i] = 10
+    return 0
+
+
+# This makes the spring constants a random number from 1 to 10 inclusive
+# Usually, localization can be observed by zooming into the x vs t graph
+# localization means all the energy ends up in just a few masses
+def random_k():
+    for i in range(0,n+1):
+        k[i]=np.random.randint(1,11)
+        
+#alternating_k()
+random_k()
+print("spring constants =",k)
+
+
+s = int(T/dt)
+# These are the 2D arrays (n+2 by s) filled with zeros (including walls)
+# "+2" accounts for the two walls
+x = np.zeros((n+2,s))
 v = x.copy()
 
-print(x)
+# This is the total energy at time t. If E is changing too much, we must reduce dt.
+#for i in range(1,n+1):
+#E = np.zeros(s)
+
+x[1][0]=10 # We need a perturbation to start the system
+
+print("steps =",s)
+
+
+for t in range(1,s): 
+    for i in range(1,n+1):
+        
+        change1=(x[i][t-1]-x[i-1][t-1]) # change in lenght of spring i-1
+        change2=(x[i][t-1]-x[i+1][t-1]) # change in lenght of spring i
+                        
+        F_1 = -k[i-1]*change1   # force between masses i and i-1
+        F_2 = -k[i]*change2      # force between masses i and i+1
+        
+        F = F_1+F_2 # total force on mass i
+        a=F/m[i-1] 
+        # It is important that we first calculate the velocity rather than the position.
+        # This is because we use an explicit method (Forward Euler method) to calculate velocity,
+        # Whereas we use an implicit method (Backward Euler) to calculate the position.
+        # Together, this is called the Semi-implicit Euler method.
+        # This method preserves energy for oscillatory systems. (Runge-Kutta 2 might be better or Verlet, each one preserves something different)
+        
+        v[i][t]=v[i][t-1]+a*dt         # We calcute v at time t by condering only the forces present at t-1
+        x[i][t]=x[i][t-1]+v[i][t]*dt   # To calculate x at t, we consider the v at t, instead of at t-1
+
+
+fig, (ax1, ax2) = plt.subplots(2) # Create two graphs
+
+for i in range(1,n+1):
+    ax1.plot(x[i],label=str(i))
+ax1.set_title("Displacement vs Time")
+
+ax1.legend()
+
+# Compute the Power Spectral Density and plot it
+ax2.psd(x[1],T,1/dt)
+plt.show()
