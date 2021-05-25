@@ -1,7 +1,8 @@
 """
 Normal Modes of Mass-Spring System with Non-Uniform Spring Constants
+Authors: Group 5 members
 
-This simulation models any one-dimensional mass-spring system.
+This simulation models a mass-spring system.
 The leftmost and rightmost masses are considered rigid walls.
 Modelling method: Semi-Implicit Euler (Euler-Cromer)
 
@@ -30,11 +31,11 @@ import matplotlib.pyplot as plt #This draws a graph
 import numpy as np              #This makes arrays faster
 from numpy import random
 
-# Running time is O(n*T/dt)
-# Sampling theorem 
-n = 10
+# Running time is O(n*T/dt)(not sure?)
+# The Sampling theorem is important (This tells us how small dt must be, but I don't fully understand it.)
+n = 3
 m = [10]*(n)  # Small m can lead to a crash 
-T = 10000     # Larger T makes PSD more accurate
+T = 1000     # Larger T makes PSD more accurate
 dt = 1
 k = [1]*(n+1) # Large k can lead to crash
 
@@ -48,13 +49,13 @@ def alternating_k():
 
 # This makes the spring constants a random number from 1 to 10 inclusive
 # Usually, localization can be observed by zooming into the x vs t graph
-# localization means all the energy ends up in just a few masses
+# localization means all the energy ends up in just a few masses (usually 2)
 def random_k():
     for i in range(0,n+1):
         k[i]=np.random.randint(1,11)
         
 #alternating_k()
-random_k()
+#random_k()
 print("spring constants =",k)
 
 
@@ -64,11 +65,11 @@ s = int(T/dt)
 x = np.zeros((n+2,s))
 v = x.copy()
 
-# This is the total energy at time t. If E is changing too much, we must reduce dt.
-#for i in range(1,n+1):
+# (NOT YET IMPLEMENTED) This is the total energy at time t. We must check wheter E changes too much.
+# And possibbly change the simulation methhod to fix it. 
 #E = np.zeros(s)
 
-x[1][0]=10 # We need a perturbation to start the system
+x[1][0]=10 # We need a perturbation to get the system moving
 
 print("steps =",s)
 
@@ -88,7 +89,7 @@ for t in range(1,s):
         # This is because we use an explicit method (Forward Euler method) to calculate velocity,
         # Whereas we use an implicit method (Backward Euler) to calculate the position.
         # Together, this is called the Semi-implicit Euler method.
-        # This method preserves energy for oscillatory systems. (Runge-Kutta 2 might be better or Verlet, each one preserves something different)
+        # This method preserves energy for oscillatory systems. (Runge-Kutta 2 or Verlet methods might be better, each one preserves something different, need to check)
         
         v[i][t]=v[i][t-1]+a*dt         # We calcute v at time t by condering only the forces present at t-1
         x[i][t]=x[i][t-1]+v[i][t]*dt   # To calculate x at t, we consider the v at t, instead of at t-1
@@ -103,5 +104,9 @@ ax1.set_title("Displacement vs Time")
 ax1.legend()
 
 # Compute the Power Spectral Density and plot it
+# (I have no clue about how this PSD thing works, but it works really well. We should explain the theory a little bit.)
 ax2.psd(x[1],T,1/dt)
+
 plt.show()
+
+# (NOT YET IMPLEMENTED) We make a 2D animation, using some(?) library about animations
